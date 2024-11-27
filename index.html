@@ -1,11 +1,74 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Novel Collection</title>
 </head>
 <body>
-    
+  <h1>Novel Collection</h1>
+  <ul id="novel-list"></ul>
+
+  <h2>Add a New Novel</h2>
+  <input id="title" placeholder="Title"><br>
+  <input id="author" placeholder="Author"><br>
+  <textarea id="description" placeholder="Description"></textarea><br>
+  <input id="publishedYear" placeholder="Published Year" type="number"><br>
+  <button onclick="addNovel()">Add Novel</button>
+
+  <script>
+    const apiUrl = '/api/novels'; // This will now work since the frontend and backend are on the same server
+
+    // Fetch and display novels
+    async function fetchNovels() {
+      try {
+        const response = await fetch(apiUrl);
+        const novels = await response.json();
+        const list = document.getElementById('novel-list');
+        list.innerHTML = novels.map(novel => `
+          <li>
+            <strong>${novel.title}</strong> by ${novel.author} (${novel.publishedYear})
+            <button onclick="deleteNovel(${novel.id})">Delete</button>
+            <p>${novel.description}</p>
+          </li>
+        `).join('');
+      } catch (error) {
+        console.error('Error fetching novels:', error);
+      }
+    }
+
+    // Add a new novel
+    async function addNovel() {
+      const title = document.getElementById('title').value;
+      const author = document.getElementById('author').value;
+      const description = document.getElementById('description').value;
+      const publishedYear = document.getElementById('publishedYear').value;
+
+      try {
+        await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, author, description, publishedYear })
+        });
+        fetchNovels();
+      } catch (error) {
+        console.error('Error adding novel:', error);
+      }
+    }
+
+    // Delete a novel
+    async function deleteNovel(id) {
+      try {
+        await fetch(`${apiUrl}/${id}`, { method: 'DELETE' });
+        fetchNovels();
+      } catch (error) {
+        console.error('Error deleting novel:', error);
+      }
+    }
+
+    // Fetch novels on page load
+    document.addEventListener('DOMContentLoaded', fetchNovels);
+  </script>
 </body>
 </html>
+
